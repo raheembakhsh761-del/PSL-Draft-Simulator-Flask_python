@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 style="color: #2c3e50; margin-bottom: 10px;">💰 Pre-Draft Player Buying</h2>
+<p style="color: #7f8c8d; margin-bottom: 30px;">Each team can buy maximum 3 players before the draft starts (one per category)</p>
+
+<!-- Team Selection Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px;">
+    {% for team in teams %}
+    <div class="card" style="text-align: center; {% if team.pre_draft_count >= 3 %}opacity: 0.6;{% endif %}">
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">{{ team.name }}</h3>
+        <div style="margin-bottom: 15px;">
+            <span class="badge" style="background: {% if team.pre_draft_count >= 3 %}#dc3545{% else %}#28a745{% endif %}; color: white;">
+                {{ team.pre_draft_count }}/3 Bought
+            </span>
+        </div>
+        <p style="color: #7f8c8d; margin-bottom: 15px;">Points: {{ team.current_points }}/{{ team.max_points }}</p>
+        {% if team.pre_draft_count < 3 %}
+        <button onclick="showBuyModal({{ loop.index0 }}, '{{ team.name }}')" class="btn btn-primary">Buy Player</button>
+        {% else %}
+        <button disabled class="btn btn-primary" style="opacity: 0.5; cursor: not-allowed;">Limit Reached</button>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Available Players -->
+<div class="card">
+    <h3 style="color: #2c3e50; margin-bottom: 20px;">Available Players</h3>
+    
+    {% if players %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Country</th>
+                    <th>Category</th>
+                    <th>Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in players %}
+                <tr>
+                    <td><strong>{{ player.id }}</strong></td>
+                    <td>{{ player.name }}</td>
+                    <td>{{ player.country }}</td>
+                    <td>
+                        <span class="badge" style="background: {{ get_category_color(player.category) }}; color: {% if player.category in ['Platinum', 'Diamond', 'Silver', 'Emerging'] %}#000{% else %}#fff{% endif %};">
+                            {{ player.category }}
+                        </span>
+                    </td>
+                    <td><strong>{{ player.rating }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: #7f8c8d; text-align: center; padding: 30px;">No players available</p>
+    {% endif %}
+</div>
+
+<!-- Buy Modal -->
+<div id="buyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 40px; border-radius: 15px; max-width: 500px; width: 90%;">
+        <h3 style="color: #2c3e50; margin-bottom: 20px;" id="modalTeamName">Buy Player</h3>
+        <form method="POST" action="/pre_draft_buy">
+            <input type="hidden" name="team_idx" id="team_idx">
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">Team Password:</label>
+                <input type="password" name="password" placeholder="Enter team password" required>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">Select Player:</label>
+                <select name="player_id" required style="padding: 12px; width: 100%;">
+                    <option value="">-- Select Player --</option>
+                    {% for player in players %}
+                    <option value="{{ player.id }}">{{ player.name }} ({{ player.category }}, Rating: {{ player.rating }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-success" style="flex: 1;">Buy Player</button>
+                <button type="button" onclick="hideBuyModal()" class="btn btn-danger" style="flex: 1;">Cancel</button>
+            </div>
+        </form>
+        <p style="margin-top: 15px; color: #7f8c8d; font-size: 14px;">Password format: teamname123 (e.g., lahore123)</p>
+    </div>
+</div>
+
+<script>
+function showBuyModal(teamIdx, teamName) {
+    document.getElementById('team_idx').value = teamIdx;
+    document.getElementById('modalTeamName').textContent = teamName + ' - Buy Player';
+    document.getElementById('buyModal').style.display = 'flex';
+}
+
+function hideBuyModal() {
+    document.getElementById('buyModal').style.display = 'none';
+}
+</script>
+{% endblock %}

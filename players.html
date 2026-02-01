@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 style="color: #2c3e50; margin-bottom: 30px;">👥 All Players (Sorted by Category & Rating)</h2>
+
+<!-- Register New Player -->
+<div class="card" style="background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);">
+    <h3 style="color: #2c3e50; margin-bottom: 20px;">➕ Register New Player</h3>
+    <form method="POST" action="/register_player" style="display: grid; gap: 15px;">
+        <div>
+            <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">Player Name:</label>
+            <input type="text" name="name" placeholder="Enter player name" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+            <div>
+                <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">Rating (1-100):</label>
+                <input type="number" name="rating" min="1" max="100" placeholder="Rating" required>
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">Price (PKR):</label>
+                <input type="number" name="price" min="1000" placeholder="e.g., 500000" required>
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">Country:</label>
+                <input type="text" name="country" placeholder="Pakistan (default)" value="Pakistan">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">Register Player</button>
+    </form>
+</div>
+
+<!-- Players Table -->
+<div style="margin-top: 30px;">
+    <h3 style="color: #2c3e50; margin-bottom: 20px;">Player List</h3>
+    
+    <!-- Category Legend -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+        <span class="badge" style="background: #E5E4E2; color: #000;">Platinum (90+)</span>
+        <span class="badge" style="background: #B9F2FF; color: #000;">Diamond (80-90)</span>
+        <span class="badge" style="background: #C0C0C0; color: #000;">Silver (60-80)</span>
+        <span class="badge" style="background: #CD7F32; color: #fff;">Bronze (50-60)</span>
+        <span class="badge" style="background: #90EE90; color: #000;">Emerging (<50)</span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Country</th>
+                <th>Category</th>
+                <th>Rating</th>
+                <th>Price</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for player in players %}
+            <tr>
+                <td><strong>{{ loop.index }}</strong></td>
+                <td><strong>{{ player.id }}</strong></td>
+                <td>{{ player.name }}</td>
+                <td>{{ player.country }}</td>
+                <td>
+                    <span class="badge" style="background: {{ get_category_color(player.category) }}; color: {% if player.category in ['Platinum', 'Diamond', 'Silver', 'Emerging'] %}#000{% else %}#fff{% endif %};">
+                        {{ player.category }}
+                    </span>
+                </td>
+                <td><strong>{{ player.rating }}</strong></td>
+                <td><strong>{{ format_currency(player.price) }}</strong></td>
+                <td>
+                    {% if player.is_picked %}
+                        <span class="badge" style="background: #dc3545; color: white;">✓ Picked</span>
+                    {% else %}
+                        <span class="badge" style="background: #28a745; color: white;">Available</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top: 30px;">
+    <p style="color: #7f8c8d;"><strong>Total Players:</strong> {{ players|length }}</p>
+    <p style="color: #7f8c8d;"><strong>Available:</strong> {{ players|selectattr('is_picked', 'false')|list|length }}</p>
+    <p style="color: #7f8c8d;"><strong>Picked:</strong> {{ players|selectattr('is_picked', 'true')|list|length }}</p>
+</div>
+{% endblock %}

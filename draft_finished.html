@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="text-align: center; padding: 40px 0;">
+    <h1 style="color: #2c3e50; font-size: 3em; margin-bottom: 10px;">🎉 Draft Completed!</h1>
+    <p style="color: #7f8c8d; font-size: 1.2em;">All teams have completed their picks</p>
+</div>
+
+<!-- Final Teams Results -->
+{% for team in teams %}
+<div class="card" style="margin-bottom: 30px; border-left: 5px solid #667eea;">
+    <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%); border-radius: 10px; margin-bottom: 20px;">
+        <h2 style="color: #2c3e50; margin-bottom: 15px;">🏆 {{ team.name }}</h2>
+        <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+            <div>
+                <p style="color: #7f8c8d; font-size: 14px;">Total Players</p>
+                <p style="color: #2c3e50; font-size: 28px; font-weight: bold;">{{ team.players|length }}</p>
+            </div>
+            <div>
+                <p style="color: #7f8c8d; font-size: 14px;">Points Used</p>
+                <p style="color: #667eea; font-size: 28px; font-weight: bold;">{{ team.current_points }}/{{ team.max_points }}</p>
+            </div>
+            <div>
+                <p style="color: #7f8c8d; font-size: 14px;">Foreign Players</p>
+                <p style="color: #e74c3c; font-size: 28px; font-weight: bold;">{{ team.foreign_players }}/3</p>
+            </div>
+            <div>
+                <p style="color: #7f8c8d; font-size: 14px;">Points Remaining</p>
+                <p style="color: #27ae60; font-size: 28px; font-weight: bold;">{{ team.max_points - team.current_points }}</p>
+            </div>
+        </div>
+    </div>
+
+    {% if team.players %}
+    <h3 style="color: #2c3e50; margin-bottom: 15px;">Squad</h3>
+    
+    <!-- Players by Category -->
+    {% set categories = ['Platinum', 'Diamond', 'Silver', 'Bronze', 'Emerging'] %}
+    {% for category in categories %}
+        {% set category_players = team.players|selectattr('category', 'equalto', category)|list %}
+        {% if category_players %}
+        <div style="margin-bottom: 25px;">
+            <h4 style="color: #7f8c8d; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #ecf0f1;">
+                <span class="badge" style="background: {{ get_category_color(category) }}; color: {% if category in ['Platinum', 'Diamond', 'Silver', 'Emerging'] %}#000{% else %}#fff{% endif %};">
+                    {{ category }}
+                </span>
+                ({{ category_players|length }} players)
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">
+                {% for player in category_players %}
+                <div style="padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 3px solid {{ get_category_color(category) }};">
+                    <strong>{{ player.name }}</strong>
+                    <div style="color: #7f8c8d; font-size: 14px; margin-top: 5px;">
+                        {{ player.country }} | Rating: {{ player.rating }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+    {% else %}
+    <p style="color: #7f8c8d; text-align: center; padding: 30px;">No players picked</p>
+    {% endif %}
+</div>
+{% endfor %}
+
+<!-- Summary Statistics -->
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <h3 style="margin-bottom: 20px; text-align: center;">📊 Draft Statistics</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; text-align: center;">
+        <div>
+            <p style="opacity: 0.9; margin-bottom: 5px;">Total Picks</p>
+            <p style="font-size: 32px; font-weight: bold;">
+                {% set total = namespace(count=0) %}
+                {% for team in teams %}
+                    {% set total.count = total.count + team.players|length %}
+                {% endfor %}
+                {{ total.count }}
+            </p>
+        </div>
+        <div>
+            <p style="opacity: 0.9; margin-bottom: 5px;">Avg Points/Team</p>
+            <p style="font-size: 32px; font-weight: bold;">
+                {% set total_points = namespace(sum=0) %}
+                {% for team in teams %}
+                    {% set total_points.sum = total_points.sum + team.current_points %}
+                {% endfor %}
+                {{ (total_points.sum / teams|length)|round|int }}
+            </p>
+        </div>
+        <div>
+            <p style="opacity: 0.9; margin-bottom: 5px;">Foreign Players</p>
+            <p style="font-size: 32px; font-weight: bold;">
+                {% set foreign = namespace(count=0) %}
+                {% for team in teams %}
+                    {% set foreign.count = foreign.count + team.foreign_players %}
+                {% endfor %}
+                {{ foreign.count }}
+            </p>
+        </div>
+        <div>
+            <p style="opacity: 0.9; margin-bottom: 5px;">Local Players</p>
+            <p style="font-size: 32px; font-weight: bold;">
+                {% set total_local = namespace(count=0) %}
+                {% for team in teams %}
+                    {% set total_local.count = total_local.count + (team.players|length - team.foreign_players) %}
+                {% endfor %}
+                {{ total_local.count }}
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div style="text-align: center; margin-top: 40px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+    <a href="/" class="btn btn-primary" style="padding: 15px 40px; font-size: 18px;">🏠 Go to Home</a>
+    <a href="/teams" class="btn btn-info" style="padding: 15px 40px; font-size: 18px;">🏆 View Teams</a>
+    <form method="POST" action="/reset" onsubmit="return confirm('Are you sure you want to reset everything?');" style="display: inline;">
+        <button type="submit" class="btn btn-danger" style="padding: 15px 40px; font-size: 18px;">🔄 New Draft</button>
+    </form>
+</div>
+{% endblock %}

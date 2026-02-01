@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="text-align: center; margin-bottom: 30px;">
+    <h2 style="color: #2c3e50;">🎯 PSL Draft in Progress</h2>
+    <p style="color: #7f8c8d; font-size: 18px; margin-top: 10px;">Round {{ current_round }} | Picks Remaining: {{ total_picks }}</p>
+</div>
+
+<!-- Current Turn -->
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center;">
+    <h2 style="margin-bottom: 10px;">🎯 Current Turn</h2>
+    <h1 style="font-size: 2.5em; margin: 20px 0;">{{ current_team.name }}</h1>
+    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+        <div>
+            <p style="opacity: 0.9;">Points Used</p>
+            <p style="font-size: 24px; font-weight: bold;">{{ current_team.current_points }}/{{ current_team.max_points }}</p>
+        </div>
+        <div>
+            <p style="opacity: 0.9;">Budget Used</p>
+            <p style="font-size: 18px; font-weight: bold;">{{ format_currency(current_team.current_budget) }}</p>
+            <p style="font-size: 14px; opacity: 0.8;">of {{ format_currency(current_team.max_budget) }}</p>
+        </div>
+        <div>
+            <p style="opacity: 0.9;">Players</p>
+            <p style="font-size: 24px; font-weight: bold;">{{ current_team.players|length }}</p>
+        </div>
+        <div>
+            <p style="opacity: 0.9;">Foreign</p>
+            <p style="font-size: 24px; font-weight: bold;">{{ current_team.foreign_players }}/3</p>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div style="display: flex; gap: 15px; margin: 30px 0; flex-wrap: wrap;">
+    <button onclick="showPickModal()" class="btn btn-success" style="flex: 1;">✅ Pick Player</button>
+    <form method="POST" action="/draft_undo" style="flex: 1;">
+        <button type="submit" class="btn btn-warning" style="width: 100%;">↩️ Undo</button>
+    </form>
+    <form method="POST" action="/draft_skip" style="flex: 1;">
+        <button type="submit" class="btn btn-info" style="width: 100%;">⏭️ Skip</button>
+    </form>
+</div>
+
+<!-- Available Players -->
+<div class="card">
+    <h3 style="color: #2c3e50; margin-bottom: 20px;">Available Players ({{ available_players|length }}) - Sorted by Category</h3>
+    
+    {% if available_players %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Country</th>
+                    <th>Category</th>
+                    <th>Rating</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in available_players %}
+                <tr>
+                    <td><strong>{{ loop.index }}</strong></td>
+                    <td><strong>{{ player.id }}</strong></td>
+                    <td>{{ player.name }}</td>
+                    <td>{{ player.country }}</td>
+                    <td>
+                        <span class="badge" style="background: {{ get_category_color(player.category) }}; color: {% if player.category in ['Platinum', 'Diamond', 'Silver', 'Emerging'] %}#000{% else %}#fff{% endif %};">
+                            {{ player.category }}
+                        </span>
+                    </td>
+                    <td><strong>{{ player.rating }}</strong></td>
+                    <td><strong>{{ format_currency(player.price) }}</strong></td>
+                    <td>
+                        <button onclick="quickPick('{{ player.id }}')" class="btn btn-success" style="padding: 8px 15px; font-size: 14px;">Pick</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: #7f8c8d; text-align: center; padding: 30px;">No players available</p>
+    {% endif %}
+</div>
+
+<!-- All Teams Status -->
+<div style="margin-top: 40px;">
+    <h3 style="color: #2c3e50; margin-bottom: 20px;">All Teams Status</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+        {% for team in teams %}
+        <div class="card" style="{% if team.name == current_team.name %}border: 3px solid #667eea;{% endif %}">
+            <h4 style="color: #2c3e50; margin-bottom: 10px;">{{ team.name }}</h4>
+            <p style="margin: 5px 0;">Points: <strong>{{ team.current_points }}/{{ team.max_points }}</strong></p>
+            <p style="margin: 5px 0; font-size: 13px;">Budget: <strong>{{ format_currency(team.current_budget) }}</strong></p>
+            <p style="margin: 5px 0;">Players: <strong>{{ team.players|length }}</strong></p>
+            <p style="margin: 5px 0;">Foreign: <strong>{{ team.foreign_players }}/3</strong></p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Pick Modal -->
+<div id="pickModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 40px; border-radius: 15px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+        <h3 style="color: #2c3e50; margin-bottom: 20px;">Pick Player for {{ current_team.name }}</h3>
+        <form method="POST" action="/draft_pick">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">Select Player:</label>
+                <select name="player_id" required style="padding: 12px; width: 100%;">
+                    <option value="">-- Select Player --</option>
+                    {% for player in available_players %}
+                    <option value="{{ player.id }}">{{ player.name }} ({{ player.category }}, Rating: {{ player.rating }}, Price: {{ format_currency(player.price) }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-success" style="flex: 1;">Confirm Pick</button>
+                <button type="button" onclick="hidePickModal()" class="btn btn-danger" style="flex: 1;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showPickModal() {
+    document.getElementById('pickModal').style.display = 'flex';
+}
+
+function hidePickModal() {
+    document.getElementById('pickModal').style.display = 'none';
+}
+
+function quickPick(playerId) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/draft_pick';
+    
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'player_id';
+    input.value = playerId;
+    
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %}

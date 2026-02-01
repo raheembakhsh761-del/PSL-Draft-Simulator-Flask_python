@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 style="color: #2c3e50; margin-bottom: 30px;">🏆 Team Status</h2>
+
+<div style="display: grid; gap: 20px;">
+    {% for team in teams %}
+    <div class="card" style="border-left: 5px solid #667eea;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="color: #2c3e50;">{{ team.name }}</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <span class="badge" style="background: #667eea; color: white;">
+                    Points: {{ team.current_points }}/{{ team.max_points }}
+                </span>
+                <span class="badge" style="background: #3498db; color: white;">
+                    Foreign: {{ team.foreign_players }}/3
+                </span>
+                <span class="badge" style="background: #f39c12; color: white;">
+                    Pre-Draft: {{ team.pre_draft_count }}/3
+                </span>
+            </div>
+        </div>
+
+        {% if team.players %}
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Player Name</th>
+                    <th>Country</th>
+                    <th>Category</th>
+                    <th>Rating</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in team.players %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><strong>{{ player.name }}</strong></td>
+                    <td>{{ player.country }}</td>
+                    <td>
+                        <span class="badge" style="background: {{ get_category_color(player.category) }}; color: {% if player.category in ['Platinum', 'Diamond', 'Silver', 'Emerging'] %}#000{% else %}#fff{% endif %};">
+                            {{ player.category }}
+                        </span>
+                    </td>
+                    <td><strong>{{ player.rating }}</strong></td>
+                    <td><strong>{{ format_currency(player.price) }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color: #7f8c8d; text-align: center; padding: 30px;">No players yet</p>
+        {% endif %}
+
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #ecf0f1;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; text-align: center;">
+                <div>
+                    <p style="color: #7f8c8d; font-size: 14px;">Total Players</p>
+                    <p style="color: #2c3e50; font-size: 24px; font-weight: bold;">{{ team.players|length }}</p>
+                </div>
+                <div>
+                    <p style="color: #7f8c8d; font-size: 14px;">Points Used</p>
+                    <p style="color: #2c3e50; font-size: 24px; font-weight: bold;">{{ team.current_points }}</p>
+                </div>
+                <div>
+                    <p style="color: #7f8c8d; font-size: 14px;">Points Remaining</p>
+                    <p style="color: #27ae60; font-size: 24px; font-weight: bold;">{{ team.max_points - team.current_points }}</p>
+                </div>
+                <div>
+                    <p style="color: #7f8c8d; font-size: 14px;">Budget Used</p>
+                    <p style="color: #2c3e50; font-size: 20px; font-weight: bold;">{{ format_currency(team.current_budget) }}</p>
+                </div>
+                <div>
+                    <p style="color: #7f8c8d; font-size: 14px;">Budget Remaining</p>
+                    <p style="color: #27ae60; font-size: 20px; font-weight: bold;">{{ format_currency(team.max_budget - team.current_budget) }}</p>
+                </div>
+                <div>
+                    <p style="color: #7f8c8d; font-size: 14px;">Foreign Players</p>
+                    <p style="color: #2c3e50; font-size: 24px; font-weight: bold;">{{ team.foreign_players }}/3</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

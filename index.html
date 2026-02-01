@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="text-align: center; padding: 40px 0;">
+    <h2 style="color: #2c3e50; margin-bottom: 30px;">Welcome to PSL Draft Simulator</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 40px;">
+        <!-- Players Card -->
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 3em; margin-bottom: 15px;">👥</div>
+            <h3 style="color: #2c3e50; margin-bottom: 10px;">Players</h3>
+            <p style="color: #7f8c8d; margin-bottom: 20px;">View and register players</p>
+            <a href="/players" class="btn btn-primary">View Players</a>
+        </div>
+
+        <!-- Teams Card -->
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 3em; margin-bottom: 15px;">🏆</div>
+            <h3 style="color: #2c3e50; margin-bottom: 10px;">Teams</h3>
+            <p style="color: #7f8c8d; margin-bottom: 20px;">Check team status</p>
+            <a href="/teams" class="btn btn-primary">View Teams</a>
+        </div>
+
+        <!-- Budget Allocation Card -->
+        <div class="card" style="text-align: center; background: linear-gradient(135deg, #f093fb20 0%, #f5576c20 100%);">
+            <div style="font-size: 3em; margin-bottom: 15px;">💰</div>
+            <h3 style="color: #2c3e50; margin-bottom: 10px;">Budget Allocation</h3>
+            <p style="color: #7f8c8d; margin-bottom: 20px;">Manage team budgets</p>
+            <a href="/budget_allocation" class="btn btn-primary">Allocate Budget</a>
+        </div>
+
+        <!-- Pre-Draft Card -->
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 3em; margin-bottom: 15px;">🛒</div>
+            <h3 style="color: #2c3e50; margin-bottom: 10px;">Pre-Draft</h3>
+            <p style="color: #7f8c8d; margin-bottom: 20px;">Buy players before draft</p>
+            <a href="/pre_draft" class="btn btn-primary">Pre-Draft Buying</a>
+        </div>
+
+        <!-- Draft Card -->
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 3em; margin-bottom: 15px;">📋</div>
+            <h3 style="color: #2c3e50; margin-bottom: 10px;">Draft</h3>
+            <p style="color: #7f8c8d; margin-bottom: 20px;">Start the main draft</p>
+            {% if draft_started %}
+                <a href="/draft" class="btn btn-success">Continue Draft</a>
+            {% else %}
+                <button onclick="showStartModal()" class="btn btn-success">Start Draft</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Teams Overview -->
+    <div style="margin-top: 50px;">
+        <h3 style="color: #2c3e50; margin-bottom: 20px;">Teams Overview</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+            {% for team in teams %}
+            <div class="card" style="background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);">
+                <h4 style="color: #2c3e50; margin-bottom: 10px;">{{ team.name }}</h4>
+                <div style="margin: 10px 0;">
+                    <p style="margin: 5px 0; font-size: 14px;">Points: <strong>{{ team.current_points }}/{{ team.max_points }}</strong></p>
+                    
+                    <!-- Budget Progress Bar -->
+                    <div style="margin: 10px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="font-size: 12px; color: #7f8c8d;">Budget</span>
+                            <span style="font-size: 12px; color: #7f8c8d;">{{ "%.0f"|format((team.current_budget / team.max_budget * 100) if team.max_budget > 0 else 0) }}%</span>
+                        </div>
+                        <div style="background: #ecf0f1; border-radius: 10px; height: 20px; overflow: hidden;">
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100%; width: {{ (team.current_budget / team.max_budget * 100) if team.max_budget > 0 else 0 }}%; transition: width 0.3s;"></div>
+                        </div>
+                        <p style="margin-top: 5px; font-size: 12px; color: #7f8c8d;">
+                            {{ format_currency(team.current_budget) }} / {{ format_currency(team.max_budget) }}
+                        </p>
+                    </div>
+                    
+                    <p style="margin: 5px 0; font-size: 14px;">Players: <strong>{{ team.players|length }}</strong></p>
+                    <p style="margin: 5px 0; font-size: 14px;">Foreign: <strong>{{ team.foreign_players }}/3</strong></p>
+                    <p style="margin: 5px 0; font-size: 14px;">Pre-Draft: <strong>{{ team.pre_draft_count }}/3</strong></p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-top: 40px;">
+        <h3 style="margin-bottom: 20px; text-align: center;">📊 System Overview</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; text-align: center;">
+            <div>
+                <p style="opacity: 0.9; margin-bottom: 5px;">Total Teams</p>
+                <p style="font-size: 32px; font-weight: bold;">{{ teams|length }}</p>
+            </div>
+            <div>
+                <p style="opacity: 0.9; margin-bottom: 5px;">Total Budget</p>
+                <p style="font-size: 24px; font-weight: bold;">
+                    {% set total_budget = namespace(sum=0) %}
+                    {% for team in teams %}
+                        {% set total_budget.sum = total_budget.sum + team.max_budget %}
+                    {% endfor %}
+                    {{ format_currency(total_budget.sum) }}
+                </p>
+            </div>
+            <div>
+                <p style="opacity: 0.9; margin-bottom: 5px;">Players Picked</p>
+                <p style="font-size: 32px; font-weight: bold;">
+                    {% set picked = namespace(count=0) %}
+                    {% for team in teams %}
+                        {% set picked.count = picked.count + team.players|length %}
+                    {% endfor %}
+                    {{ picked.count }}
+                </p>
+            </div>
+            <div>
+                <p style="opacity: 0.9; margin-bottom: 5px;">Draft Status</p>
+                <p style="font-size: 24px; font-weight: bold;">
+                    {% if draft_started %}In Progress{% else %}Not Started{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Button -->
+    <div style="margin-top: 40px;">
+        <form method="POST" action="/reset" onsubmit="return confirm('Are you sure you want to reset everything?');">
+            <button type="submit" class="btn btn-danger">🔄 Reset Application</button>
+        </form>
+    </div>
+</div>
+
+<!-- Start Draft Modal -->
+<div id="startModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 40px; border-radius: 15px; max-width: 400px; width: 90%;">
+        <h3 style="color: #2c3e50; margin-bottom: 20px;">Start Draft</h3>
+        <form method="POST" action="/start_draft">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">Admin Password:</label>
+                <input type="password" name="admin_password" placeholder="Enter admin password" required>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-success" style="flex: 1;">Start</button>
+                <button type="button" onclick="hideStartModal()" class="btn btn-danger" style="flex: 1;">Cancel</button>
+            </div>
+        </form>
+        <p style="margin-top: 15px; color: #7f8c8d; font-size: 14px;">Default password: admin123</p>
+    </div>
+</div>
+
+<script>
+function showStartModal() {
+    document.getElementById('startModal').style.display = 'flex';
+}
+
+function hideStartModal() {
+    document.getElementById('startModal').style.display = 'none';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="text-align: center; margin-bottom: 30px;">
+    <h2 style="color: #2c3e50;">💰 Budget Allocation Management</h2>
+    <p style="color: #7f8c8d; margin-top: 10px;">Allocate and manage budgets for each team</p>
+</div>
+
+<!-- Quick Update All Budgets -->
+<div class="card" style="background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%); margin-bottom: 30px;">
+    <h3 style="color: #2c3e50; margin-bottom: 20px;">⚡ Quick Update All Teams</h3>
+    <form method="POST" action="/update_all_budgets">
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">Admin Password:</label>
+            <input type="password" name="admin_password" placeholder="Enter admin password" required style="max-width: 400px;">
+            <p style="margin-top: 5px; color: #7f8c8d; font-size: 14px;">Default: admin123</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            {% for team in teams %}
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">{{ team.name }}</label>
+                <input type="number" name="budget_{{ loop.index0 }}" value="{{ team.max_budget }}" min="0" step="10000" required style="width: 100%;">
+                <p style="margin-top: 5px; color: #7f8c8d; font-size: 12px;">Current: {{ format_currency(team.max_budget) }}</p>
+                <p style="margin-top: 2px; color: #e74c3c; font-size: 12px;">Used: {{ format_currency(team.current_budget) }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-success" style="width: 100%;">✅ Update All Budgets</button>
+    </form>
+</div>
+
+<!-- Individual Team Budget Management -->
+<div style="margin-top: 40px;">
+    <h3 style="color: #2c3e50; margin-bottom: 20px;">Individual Team Budget Updates</h3>
+    
+    <div style="display: grid; gap: 20px;">
+        {% for team in teams %}
+        <div class="card" style="border-left: 5px solid #667eea;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h3 style="color: #2c3e50; margin-bottom: 10px;">{{ team.name }}</h3>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <span class="badge" style="background: #667eea; color: white;">
+                            Max Budget: {{ format_currency(team.max_budget) }}
+                        </span>
+                        <span class="badge" style="background: #e74c3c; color: white;">
+                            Used: {{ format_currency(team.current_budget) }}
+                        </span>
+                        <span class="badge" style="background: #27ae60; color: white;">
+                            Available: {{ format_currency(team.max_budget - team.current_budget) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div style="background: #ecf0f1; border-radius: 10px; height: 30px; margin-bottom: 20px; overflow: hidden;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100%; width: {{ (team.current_budget / team.max_budget * 100) if team.max_budget > 0 else 0 }}%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; transition: width 0.3s;">
+                    {{ "%.1f"|format(team.current_budget / team.max_budget * 100) if team.max_budget > 0 else 0 }}%
+                </div>
+            </div>
+
+            <!-- Update Form -->
+            <form method="POST" action="/update_team_budget" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap;">
+                <input type="hidden" name="team_idx" value="{{ loop.index0 }}">
+                
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">New Budget (PKR):</label>
+                    <input type="number" name="new_budget" value="{{ team.max_budget }}" min="{{ team.current_budget }}" step="10000" required>
+                </div>
+
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600;">Admin Password:</label>
+                    <input type="password" name="admin_password" placeholder="Enter password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="padding: 12px 30px;">Update</button>
+            </form>
+
+            <!-- Team Details -->
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #ecf0f1;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; text-align: center;">
+                    <div>
+                        <p style="color: #7f8c8d; font-size: 12px;">Players</p>
+                        <p style="color: #2c3e50; font-size: 20px; font-weight: bold;">{{ team.players|length }}</p>
+                    </div>
+                    <div>
+                        <p style="color: #7f8c8d; font-size: 12px;">Points Used</p>
+                        <p style="color: #2c3e50; font-size: 20px; font-weight: bold;">{{ team.current_points }}/{{ team.max_points }}</p>
+                    </div>
+                    <div>
+                        <p style="color: #7f8c8d; font-size: 12px;">Foreign</p>
+                        <p style="color: #2c3e50; font-size: 20px; font-weight: bold;">{{ team.foreign_players }}/3</p>
+                    </div>
+                    <div>
+                        <p style="color: #7f8c8d; font-size: 12px;">Pre-Draft</p>
+                        <p style="color: #2c3e50; font-size: 20px; font-weight: bold;">{{ team.pre_draft_count }}/3</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Players List -->
+            {% if team.players %}
+            <div style="margin-top: 20px;">
+                <h4 style="color: #2c3e50; margin-bottom: 10px;">Current Squad ({{ team.players|length }} players)</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+                    {% for player in team.players %}
+                    <div style="padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 14px;">
+                        <strong>{{ player.name }}</strong>
+                        <div style="color: #7f8c8d; font-size: 12px; margin-top: 3px;">
+                            {{ format_currency(player.price) }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-top: 40px;">
+    <h3 style="margin-bottom: 20px; text-align: center;">📊 Budget Summary</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; text-align: center;">
+        <div>
+            <p style="opacity: 0.9; margin-bottom: 5px;">Total Budget Allocated</p>
+            <p style="font-size: 28px; font-weight: bold;">
+                {% set total_budget = namespace(sum=0) %}
+                {% for team in teams %}
+                    {% set total_budget.sum = total_budget.sum + team.max_budget %}
+                {% endfor %}
+                {{ format_currency(total_budget.sum) }}
+            </p>
+        </div>
+        <div>
+            <p style="opacity: 0.9; margin-bottom: 5px;">Total Budget Used</p>
+            <p style="font-size: 28px; font-weight: bold;">
+                {% set used_budget = namespace(sum=0) %}
+                {% for team in teams %}
+                    {% set used_budget.sum = used_budget.sum + team.current_budget %}
+                {% endfor %}
+                {{ format_currency(used_budget.sum) }}
+            </p>
+        </div>
+        <div>
+            <p style="opacity: 0.9; margin-bottom: 5px;">Total Available</p>
+            <p style="font-size: 28px; font-weight: bold;">
+                {{ format_currency(total_budget.sum - used_budget.sum) }}
+            </p>
+        </div>
+        <div>
+            <p style="opacity: 0.9; margin-bottom: 5px;">Average Budget/Team</p>
+            <p style="font-size: 28px; font-weight: bold;">
+                {{ format_currency((total_budget.sum / teams|length)|round|int) }}
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Help Section -->
+<div class="card" style="background: #fff3cd; border-left: 4px solid #ffc107; margin-top: 30px;">
+    <h4 style="color: #856404; margin-bottom: 15px;">ℹ️ Budget Management Guidelines</h4>
+    <ul style="color: #856404; line-height: 1.8;">
+        <li><strong>Budget Limit:</strong> Teams cannot pick players if it exceeds their allocated budget</li>
+        <li><strong>Minimum Budget:</strong> Cannot reduce budget below current spending</li>
+        <li><strong>Real-time Updates:</strong> Budget changes take effect immediately</li>
+        <li><strong>Admin Control:</strong> Only admin can modify team budgets</li>
+        <li><strong>Player Pricing:</strong> Each player has a fixed price set during registration</li>
+        <li><strong>Dual Constraints:</strong> Teams must manage both points (max 1000) and budget limits</li>
+    </ul>
+</div>
+
+<div style="text-align: center; margin-top: 30px;">
+    <a href="/" class="btn btn-primary" style="padding: 15px 40px; font-size: 18px;">🏠 Back to Home</a>
+</div>
+{% endblock %}
