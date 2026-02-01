@@ -1,1 +1,75 @@
-intr
+# HOW TO RUN – PSL Draft Simulator
+
+Follow these steps to run the project successfully on your system.
+
+## ✅ Prerequisites
+
+- Python 3.8 or higher
+- pip (Python package manager)
+
+---
+
+## 📥 Step 1: Download Project
+
+1. Download the ZIP file from GitHub
+2. Extract the ZIP file
+3. Open the project folder
+
+Your Visual Studio folder structure should look like this:
+
+DSA LAB PROJECT/
+├── data/
+├── templates/
+│   ├── base.html
+│   ├── budget_allocation.html
+│   ├── draft_finished.html
+│   ├── draft.html
+│   ├── index.html
+│   ├── players.html
+│   ├── pre_draft.html
+│   └── teams.html
+└── app.py
+
+---
+
+## 📦 Step 2: Install Flask
+
+Open terminal / command prompt inside the project folder and run:
+
+    pip install flask
+
+---
+
+## ▶ Step 3: Run the Application
+
+Run the Flask app using:
+
+    python app.py
+
+---
+
+## 🌐 Step 4: Open in Browser
+
+After running, open your browser and go to:
+
+    http://127.0.0.1:5000
+
+---
+
+## 🔁 Step 5: Reset (Optional)
+
+To reset the draft and restore default data:
+
+- Use the **Reset** option from the application
+
+---
+
+## ⚠ Important Notes
+
+- Do not delete the `data/` folder
+- CSV files store permanent data
+- Keep folder structure unchanged
+
+---
+
+## ✅ Application is now running successfully
