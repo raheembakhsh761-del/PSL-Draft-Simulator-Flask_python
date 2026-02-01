@@ -73,16 +73,10 @@ To simulate the Pakistan Super League (PSL) draft process by enforcing:
 
 ---
 
-## 📂 Project Structure
-PSL-Draft-Simulator/
-|-- app.py
-|-- data/
-|   |-- players.csv
-|   |-- teams.csv
-|   |-- team_players.csv
-|   |-- draft_state.csv
-|-- templates/
-|-- static/
-|-- README.md
-|-- RUN_INSTRUCTIONS.md
+## 🤝 Contributors
+
+- **Raheem Bakhsh** — Developer — [@RaheemGitHubID](https://github.com/RaheemGitHubID)  
+- **Kishawr Raza** — Contributor — [@KishawrGitHubID](https://github.com/KishawrGitHubID)  
+- **Qasir Jillani** — Contributor — [@QasirGitHubID](https://github.com/QasirGitHubID)
+
 
