@@ -75,7 +75,7 @@ To simulate the Pakistan Super League (PSL) draft process by enforcing:
 
 ## 🤝 Contributors
 
-- **Raheem Bakhsh** — Developer — [@RaheemGitHubID](https://github.com/RaheemGitHubID)  
+- **Raheem Bakhsh** — Developer — [@RaheemGitHubID](https://github.com/raheembakhsh761-del)  
 - **Kishawr Raza** — Contributor — [@KishawrGitHubID](https://github.com/KishawrGitHubID)  
 - **Qasir Jillani** — Contributor — [@QasirGitHubID](https://github.com/QasirGitHubID)
 
